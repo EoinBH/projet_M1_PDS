@@ -6,7 +6,7 @@ import ssl
 import certifi
 
 from Document import Document
-from Author import Author
+from Corpus import Corpus
 
 # -------------------------
 # Configuration Reddit
@@ -17,13 +17,10 @@ reddit = praw.Reddit(
     user_agent='InfoApp')
 
 # -------------------------
-# Récupération des données
+# Construction du corpus
 # -------------------------
-def recupererDonnees(theme, maxPosts):
-    id2doc = {}
-    id2aut = {}
-
-    current_id = 0
+def construire_corpus(theme, maxPosts):
+    corpus = Corpus(theme)
 
     # -------- Reddit --------
     subreddit = reddit.subreddit(theme)
@@ -35,25 +32,15 @@ def recupererDonnees(theme, maxPosts):
         if len(texte) < 20:
             continue
 
-        auteur = str(post.author)
-
         doc = Document(
             titre=post.title,
-            auteur=auteur,
+            auteur=str(post.author),
             date=post.created_utc,
             url=post.url,
             texte=texte
         )
 
-        id2doc[current_id] = doc
-
-        # Gestion des auteurs
-        if auteur not in id2aut:
-            id2aut[auteur] = Author(auteur)
-
-        id2aut[auteur].add(current_id, doc)
-
-        current_id += 1
+        corpus.add_document(doc)
 
     # -------- ArXiv --------
     url = f"http://export.arxiv.org/api/query?search_query=all:{theme}&start=0&max_results={maxPosts}"
@@ -73,16 +60,10 @@ def recupererDonnees(theme, maxPosts):
             continue
 
         authors = entry['author']
-
-        # Cas 1 : un seul auteur
         if isinstance(authors, dict):
             author_names = [authors['name']]
-        # Cas 2 : plusieurs auteurs
-        elif isinstance(authors, list):
-            author_names = [a['name'] for a in authors]
-        # Sécurité (au cas où)
         else:
-            author_names = ["Unknown"]
+            author_names = [a['name'] for a in authors]
 
         for auteur in author_names:
             doc = Document(
@@ -92,44 +73,29 @@ def recupererDonnees(theme, maxPosts):
                 url=entry['id'],
                 texte=texte
             )
+            corpus.add_document(doc)
 
-        id2doc[current_id] = doc
-
-        if auteur not in id2aut:
-            id2aut[auteur] = Author(auteur)
-
-        id2aut[auteur].add(current_id, doc)
-
-        current_id += 1
-
-    return id2doc, id2aut
-
-# -------------------------
-# Statistiques auteur
-# -------------------------
-def stats_auteur(id2aut):
-    nom = input("Nom de l'auteur : ")
-
-    if nom not in id2aut:
-        print("Auteur inconnu.")
-        return
-
-    auteur = id2aut[nom]
-    print(auteur)
-    print("Taille moyenne des documents :", auteur.taille_moyenne_documents(), "mots")
+    return corpus
 
 # -------------------------
 # Programme principal
 # -------------------------
 def main():
-    theme = "jazz"
-    id2doc, id2aut = recupererDonnees(theme, 20)
+    corpus = construire_corpus("jazz", 20)
 
-    print("Nombre total de documents :", len(id2doc))
-    print("Nombre total d'auteurs :", len(id2aut))
-    print()
+    print(corpus)
+    print("\nDocuments triés par date :")
+    corpus.show_by_date(5)
 
-    stats_auteur(id2aut)
+    print("\nDocuments triés par titre :")
+    corpus.show_by_title(5)
+
+    # Sauvegarde
+    corpus.save("corpus.csv")
+
+    # Chargement
+    corpus2 = Corpus.load("corpus.csv", "jazz_reloaded")
+    print("\nCorpus rechargé :", corpus2)
 
 if __name__ == "__main__":
     main()
