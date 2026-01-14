@@ -4,10 +4,12 @@ import urllib.request
 import xmltodict
 import ssl
 import certifi
+from tabulate import tabulate
 
 from Document import Document, RedditDocument, ArxivDocument
 from Corpus import Corpus
 from DocumentFactory import DocumentFactory
+from SearchEngine import SearchEngine
 
 # -------------------------
 # Configuration Reddit
@@ -180,6 +182,27 @@ def main():
     print("Top 10 mots les plus fréquents (TF):")
     print(freq_table.head(10))
 
+    # Test du moteur de recherche y compris tests du score TF et de la mesure TFxIDF
+
+    # Le vocab et les matrices sont construits automatiquement
+    engine = SearchEngine(corpus)
+    
+    # Récupérer vocabulaire
+    vocab = engine.vocab
+    print(f"Nombre de mots dans le vocabulaire : {len(vocab)}")
+
+    # Récupérer matrice TF
+    mat_TF = engine.mat_TF
+    print(f"Matrice TF shape : {mat_TF.shape}")
+
+    # Récupérer matrice TFxIDF
+    mat_TFxIDF = engine.mat_TFxIDF
+    print(f"Matrice TFxIDF shape : {mat_TFxIDF.shape}")
+
+    # Lancer le moteur de recherche
+    df_results = engine.search("jazz harmony", top_n=5)
+
+    print(tabulate(df_results, headers='keys'))
 
 if __name__ == "__main__":
     main()

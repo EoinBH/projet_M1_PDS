@@ -1,6 +1,8 @@
 # Corpus.py
 import re
 import pandas as pd
+import numpy as np
+from scipy.sparse import csr_matrix
 from Document import Document
 from Author import Author
 
@@ -268,6 +270,15 @@ class Corpus:
         freq_df = freq_df.sort_values(by="TF", ascending=False).reset_index(drop=True)
 
         return freq_df
+
+
+    
+
+    
+
+
+
+
 
 
 
