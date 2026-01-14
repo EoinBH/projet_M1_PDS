@@ -12,6 +12,7 @@ class Document:
         self.date = datetime.fromtimestamp(date) if date != 0 else None
         self.url = url
         self.texte = texte
+        self.type = "Document"
 
     # Accesseurs
     def get_titre(self):
@@ -31,6 +32,9 @@ class Document:
 
     def __str__(self):
         return self.titre
+    
+    def getType(self):
+        return self.type
 
 class RedditDocument(Document):
     """
@@ -38,9 +42,9 @@ class RedditDocument(Document):
     """
 
     def __init__(self, titre, auteur, date, url, texte, nb_comments):
-        # Appel du constructeur de la classe mère
         super().__init__(titre, auteur, date, url, texte)
         self.nb_comments = nb_comments
+        self.type = "Reddit"
 
     # Accesseur
     def get_nb_comments(self):
@@ -51,9 +55,10 @@ class RedditDocument(Document):
         self.nb_comments = nb
 
     def __str__(self):
-        return (f"[Reddit] {self.titre} | "
-                f"Auteur : {self.auteur} | "
-                f"Commentaires : {self.nb_comments}")
+        return f"[Reddit] {self.titre} ({self.nb_comments} commentaires)"
+    
+    def getType(self):
+        return "Reddit"
 
 class ArxivDocument(Document):
     """
@@ -67,10 +72,9 @@ class ArxivDocument(Document):
         # Pour rester cohérent avec la classe mère,
         # on stocke le premier auteur comme auteur principal
         auteur_principal = auteurs[0] if auteurs else "Unknown"
-
         super().__init__(titre, auteur_principal, date, url, texte)
-
         self.co_auteurs = auteurs
+        self.type = "Arxiv"
 
     # Accesseur
     def get_co_auteurs(self):
@@ -81,6 +85,8 @@ class ArxivDocument(Document):
         self.co_auteurs = auteurs
 
     def __str__(self):
-        return (f"[ArXiv] {self.titre} | "
-                f"Auteurs : {', '.join(self.co_auteurs)}")
+        return f"[ArXiv] {self.titre} ({len(self.co_auteurs)} auteurs)"
+    
+    def getType(self):
+        return "Arxiv"
 

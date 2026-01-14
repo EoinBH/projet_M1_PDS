@@ -8,12 +8,22 @@ class Corpus:
     Classe représentant un corpus de documents
     """
 
+    _instance = None  # attribut de classe
+
+    def __new__(cls, nom):
+        if cls._instance is None:
+            cls._instance = super(Corpus, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self, nom):
-        self.nom = nom
-        self.authors = {}     # dictionnaire name -> Author
-        self.id2doc = {}      # dictionnaire id -> Document
-        self.ndoc = 0
-        self.naut = 0
+        # Évite de réinitialiser si déjà créé
+        if not hasattr(self, "initialized"):
+            self.nom = nom
+            self.authors = {}     # dictionnaire name -> Author
+            self.id2doc = {}      # dictionnaire id -> Document
+            self.ndoc = 0
+            self.naut = 0
+            self.initialized = True
 
     # -------------------------
     # Ajout d'un document
@@ -56,9 +66,7 @@ class Corpus:
     # Représentation digeste
     # -------------------------
     def __repr__(self):
-        return (f"Corpus '{self.nom}' | "
-                f"{self.ndoc} documents | "
-                f"{self.naut} auteurs")
+        return f"Corpus '{self.nom}' | {self.ndoc} documents | {self.naut} auteurs"
 
     # -------------------------
     # Sauvegarde du corpus

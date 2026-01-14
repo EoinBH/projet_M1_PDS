@@ -7,6 +7,7 @@ import certifi
 
 from Document import Document, RedditDocument, ArxivDocument
 from Corpus import Corpus
+from DocumentFactory import DocumentFactory
 
 # -------------------------
 # Configuration Reddit
@@ -98,6 +99,8 @@ def main():
     print("\nCorpus rechargé :", corpus2)
 
     # Tests des classes filles :
+    # corpus_test = Corpus("Test")
+
     doc_reddit = RedditDocument(
         titre="Great jazz album",
         auteur="user123",
@@ -115,8 +118,51 @@ def main():
         texte="This paper explores..."
     )
 
-    print(doc_reddit)
-    print(doc_arxiv)
+    # print(doc_reddit)
+    # print(doc_arxiv)
+
+    corpus2.add_document(doc_reddit)
+    corpus2.add_document(doc_arxiv)
+
+    # Affichage avec type
+    for doc in corpus2.id2doc.values():
+        print(doc.getType(), "→", doc)
+
+    # Tests de Singleton
+    c1 = Corpus("JazzCorpus")
+    c2 = Corpus("AutreNom")
+    if id(c1) == id(c2):
+        print("Singleton marche, les deux variables contiennent le même instance.")
+    else:
+        print("Singleton ne marche pas, les deux variables contiennent des instances différentes.")
+
+    # Tests de DocumentFactory
+    corpus_test = Corpus("Factory_Test")
+
+    doc_reddit = DocumentFactory.create_document(
+        doc_type="Reddit",
+        titre="Great jazz album",
+        auteur="user123",
+        date=1700000000,
+        url="https://reddit.com/...",
+        texte="This album is amazing",
+        nb_comments=42
+    )
+
+    doc_arxiv = DocumentFactory.create_document(
+        doc_type="Arxiv",
+        titre="Topology and Jazz",
+        auteurs=["Octavio A. Agustín-Aquino", "Guerino Mazzola"],
+        date=0,
+        url="http://arxiv.org/abs/1234.5678",
+        texte="This paper explores..."
+    )
+
+    corpus_test.add_document(doc_reddit)
+    corpus_test.add_document(doc_arxiv)
+
+    for doc in corpus_test.id2doc.values():
+        print(doc.getType(), "→", doc)
 
 
 if __name__ == "__main__":
