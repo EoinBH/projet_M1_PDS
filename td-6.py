@@ -164,6 +164,22 @@ def main():
     for doc in corpus_test.id2doc.values():
         print(doc.getType(), "→", doc)
 
+    # Test la recherche d'un mot-clé
+    results = corpus.search("jazz")
+    print("Occurrences trouvées :", len(results))
+
+    concordancier = corpus.concorde("jazz", context_size=20)
+    print(concordancier.head())
+
+    # Test des statistiques
+    corpus.stats(10)
+
+    # Construire la table de fréquences
+    freq_table = corpus.compute_frequencies()
+
+    print("Top 10 mots les plus fréquents (TF):")
+    print(freq_table.head(10))
+
 
 if __name__ == "__main__":
     main()
