@@ -5,7 +5,7 @@ import xmltodict
 import ssl
 import certifi
 
-from Document import Document
+from Document import Document, RedditDocument, ArxivDocument
 from Corpus import Corpus
 
 # -------------------------
@@ -96,6 +96,28 @@ def main():
     # Chargement
     corpus2 = Corpus.load("corpus.csv", "jazz_reloaded")
     print("\nCorpus rechargé :", corpus2)
+
+    # Tests des classes filles :
+    doc_reddit = RedditDocument(
+        titre="Great jazz album",
+        auteur="user123",
+        date=1700000000,
+        url="https://reddit.com/...",
+        texte="This album is amazing",
+        nb_comments=42
+    )
+
+    doc_arxiv = ArxivDocument(
+        titre="Topology and Jazz",
+        auteurs=["Octavio A. Agustín-Aquino", "Guerino Mazzola"],
+        date=0,
+        url="http://arxiv.org/abs/1234.5678",
+        texte="This paper explores..."
+    )
+
+    print(doc_reddit)
+    print(doc_arxiv)
+
 
 if __name__ == "__main__":
     main()
