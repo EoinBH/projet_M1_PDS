@@ -1,34 +1,36 @@
 # Author.py
 
-class Author:
+
+class Auteur :
     """
-    Classe représentant un auteur et sa production
+    Classe représentant un auteur et sa production documentaire
     """
 
-    def __init__(self, name):
-        self.name = name
-        self.ndoc = 0
+    # Initialise un auteur avec son nom et une production vide
+    def __init__(self, nom) :
+        self.nom = nom
+        self.nombre_documents = 0
         self.production = {}
 
-    def add(self, doc_id, document):
-        """
-        Ajoute un document à la production de l'auteur
-        """
-        self.production[doc_id] = document
-        self.ndoc += 1
+    # Ajoute un document à la production de l'auteur
+    def ajouter_document(self, identifiant_document, document) :
+        self.production[identifiant_document] = document
+        self.nombre_documents += 1
 
-    def taille_moyenne_documents(self):
-        """
-        Calcule la taille moyenne des documents (en nombre de mots)
-        """
-        if self.ndoc == 0:
+    # Calcule la taille moyenne des documents de l'auteur (en nombre de mots)
+    def taille_moyenne_documents(self) :
+        if self.nombre_documents == 0 :
             return 0
 
-        total = 0
-        for doc in self.production.values():
-            total += len(doc.texte.split())
+        total_mots = 0
+        for document in self.production.values() :
+            total_mots += len(document.texte.split())
 
-        return total / self.ndoc
+        return total_mots / self.nombre_documents
 
-    def __str__(self):
-        return f"Auteur : {self.name} | Nombre de documents : {self.ndoc}"
+    # Retourne une représentation textuelle de l'auteur
+    def __str__(self) :
+        return (
+            f"Auteur : {self.nom} | "
+            f"Nombre de documents : {self.nombre_documents}"
+        )

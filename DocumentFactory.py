@@ -1,37 +1,40 @@
 # DocumentFactory.py
+
 from Document import Document, RedditDocument, ArxivDocument
 
-class DocumentFactory:
+
+class DocumentFactory :
     """
-    Usine de création de documents
+    Usine de création de documents à partir de différentes sources
     """
 
+    # Crée et retourne un document en fonction de son type et de ses paramètres
     @staticmethod
-    def create_document(doc_type, **kwargs):
-        if doc_type == "Reddit":
+    def creer_document(type_document, **parametres) :
+        if type_document == "Reddit" :
             return RedditDocument(
-                titre=kwargs["titre"],
-                auteur=kwargs["auteur"],
-                date=kwargs["date"],
-                url=kwargs["url"],
-                texte=kwargs["texte"],
-                nb_comments=kwargs["nb_comments"]
+                titre=parametres["titre"],
+                auteur=parametres["auteur"],
+                date=parametres["date"],
+                url=parametres["url"],
+                texte=parametres["texte"],
+                nombre_commentaires=parametres["nombre_commentaires"]
             )
 
-        elif doc_type == "Arxiv":
+        elif type_document == "Arxiv" :
             return ArxivDocument(
-                titre=kwargs["titre"],
-                auteurs=kwargs["auteurs"],
-                date=kwargs["date"],
-                url=kwargs["url"],
-                texte=kwargs["texte"]
+                titre=parametres["titre"],
+                auteurs=parametres["auteurs"],
+                date=parametres["date"],
+                url=parametres["url"],
+                texte=parametres["texte"]
             )
 
-        else:
+        else :
             return Document(
-                titre=kwargs["titre"],
-                auteur=kwargs["auteur"],
-                date=kwargs["date"],
-                url=kwargs["url"],
-                texte=kwargs["texte"]
+                titre=parametres["titre"],
+                auteur=parametres["auteur"],
+                date=parametres["date"],
+                url=parametres["url"],
+                texte=parametres["texte"]
             )

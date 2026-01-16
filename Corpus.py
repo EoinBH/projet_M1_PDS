@@ -1,287 +1,224 @@
 # Corpus.py
+
 import re
 import pandas as pd
-import numpy as np
-from scipy.sparse import csr_matrix
 from Document import Document
-from Author import Author
+from Author import Auteur
 
-class Corpus:
+
+class Corpus :
     """
     Classe représentant un corpus de documents
     """
 
-    _instance = None  # attribut de classe
+    _instance = None  # Attribut de classe pour le Singleton
 
-    def __new__(cls, nom):
-        if cls._instance is None:
+    # Implémente le pattern Singleton
+    def __new__(cls, nom) :
+        if cls._instance is None :
             cls._instance = super(Corpus, cls).__new__(cls)
         return cls._instance
-    
-    def __init__(self, nom):
-        # Évite de réinitialiser si déjà créé
-        if not hasattr(self, "initialized"):
+
+    # Initialise le corpus (une seule fois avec le Singleton)
+    def __init__(self, nom) :
+        if not hasattr(self, "initialise") :
             self.nom = nom
-            self.authors = {}     # dictionnaire name -> Author
-            self.id2doc = {}      # dictionnaire id -> Document
-            self.ndoc = 0
-            self.naut = 0
-            self.initialized = True
+            self.auteurs = {}          # dictionnaire nom -> Auteur
+            self.id2doc = {}           # dictionnaire id -> Document
+            self.nombre_documents = 0
+            self.nombre_auteurs = 0
+            self.initialise = True
 
-    # -------------------------
-    # Ajout d'un document
-    # -------------------------
-    def add_document(self, document):
-        doc_id = self.ndoc
-        self.id2doc[doc_id] = document
-        self.ndoc += 1
+    # Ajoute un document au corpus et met à jour les auteurs
+    def add_document(self, document) :
+        identifiant_document = self.nombre_documents
+        self.id2doc[identifiant_document] = document
+        self.nombre_documents += 1
 
-        auteur = document.auteur
+        nom_auteur = document.auteur
 
-        if auteur not in self.authors:
-            self.authors[auteur] = Author(auteur)
-            self.naut += 1
+        if nom_auteur not in self.auteurs :
+            self.auteurs[nom_auteur] = Auteur(nom_auteur)
+            self.nombre_auteurs += 1
 
-        self.authors[auteur].add(doc_id, document)
+        self.auteurs[nom_auteur].ajouter_document(
+            identifiant_document,
+            document
+        )
 
-    # -------------------------
-    # Affichage trié par date
-    # -------------------------
-    def show_by_date(self, n=5):
-        docs = list(self.id2doc.values())
-        docs = [d for d in docs if d.date is not None]
-        docs.sort(key=lambda d: d.date)
+    # Affiche les documents triés par date
+    def show_by_date(self, n=5) :
+        documents = [d for d in self.id2doc.values() if d.date is not None]
+        documents.sort(key=lambda d : d.date)
 
-        for doc in docs[:n]:
-            print(doc.date, "-", doc)
+        for document in documents[:n] :
+            print(document.date, "-", document)
 
-    # -------------------------
-    # Affichage trié par titre
-    # -------------------------
-    def show_by_title(self, n=5):
-        docs = list(self.id2doc.values())
-        docs.sort(key=lambda d: d.titre.lower())
+    # Affiche les documents triés par titre
+    def show_by_title(self, n=5) :
+        documents = list(self.id2doc.values())
+        documents.sort(key=lambda d : d.titre.lower())
 
-        for doc in docs[:n]:
-            print(doc.titre)
+        for document in documents[:n] :
+            print(document.titre)
 
-    # -------------------------
-    # Représentation digeste
-    # -------------------------
-    def __repr__(self):
-        return f"Corpus '{self.nom}' | {self.ndoc} documents | {self.naut} auteurs"
+    # Retourne une représentation synthétique du corpus
+    def __repr__(self) :
+        return (
+            f"Corpus '{self.nom}' | "
+            f"{self.nombre_documents} documents | "
+            f"{self.nombre_auteurs} auteurs"
+        )
 
-    # -------------------------
-    # Sauvegarde du corpus
-    # -------------------------
-    def save(self, filename):
-        data = []
+    # Sauvegarde le corpus dans un fichier CSV
+    def save(self, nom_fichier) :
+        donnees = []
 
-        for doc_id, doc in self.id2doc.items():
-            data.append({
-                "id": doc_id,
-                "titre": doc.titre,
-                "auteur": doc.auteur,
-                "date": doc.date.timestamp() if doc.date else 0,
-                "url": doc.url,
-                "texte": doc.texte
+        for identifiant_document, document in self.id2doc.items() :
+            donnees.append({
+                "id" : identifiant_document,
+                "titre" : document.titre,
+                "auteur" : document.auteur,
+                "date" : document.date.timestamp() if document.date else 0,
+                "url" : document.url,
+                "texte" : document.texte
             })
 
-        df = pd.DataFrame(data)
-        df.to_csv(filename, index=False)
+        dataframe = pd.DataFrame(donnees)
+        dataframe.to_csv(nom_fichier, index=False)
 
-    # -------------------------
-    # Chargement du corpus
-    # -------------------------
+    # Charge un corpus depuis un fichier CSV
     @classmethod
-    def load(cls, filename, nom):
-        df = pd.read_csv(filename)
+    def load(cls, nom_fichier, nom) :
+        dataframe = pd.read_csv(nom_fichier)
         corpus = cls(nom)
 
-        for _, row in df.iterrows():
-            doc = Document(
-                titre=row["titre"],
-                auteur=row["auteur"],
-                date=row["date"],
-                url=row["url"],
-                texte=row["texte"]
+        for _, ligne in dataframe.iterrows() :
+            document = Document(
+                titre=ligne["titre"],
+                auteur=ligne["auteur"],
+                date=ligne["date"],
+                url=ligne["url"],
+                texte=ligne["texte"]
             )
-            corpus.add_document(doc)
+            corpus.add_document(document)
 
         return corpus
-    
-    def _build_full_text(self):
-        """
-        Construit une seule fois la chaîne concaténant tous les textes du corpus
-        """
-        if not hasattr(self, "_full_text"):
-            self._full_text = " ".join(
-                doc.texte for doc in self.id2doc.values()
+
+    # Construit et mémorise le texte global du corpus
+    def _construire_texte_complet(self) :
+        if not hasattr(self, "_texte_complet") :
+            self._texte_complet = " ".join(
+                document.texte for document in self.id2doc.values()
             )
 
-    def search(self, keyword):
-        """
-        Retourne les passages contenant le mot-clef
-        """
-        self._build_full_text()
+    # Recherche toutes les occurrences d’un mot-clé dans le corpus
+    def search(self, mot_cle) :
+        self._construire_texte_complet()
 
-        motif = re.compile(keyword, re.IGNORECASE)
-        matches = []
+        motif = re.compile(mot_cle, re.IGNORECASE)
+        correspondances = []
 
-        for m in motif.finditer(self._full_text):
-            matches.append({
-                "match": m.group(),
-                "start": m.start(),
-                "end": m.end()
+        for match in motif.finditer(self._texte_complet) :
+            correspondances.append({
+                "match" : match.group(),
+                "start" : match.start(),
+                "end" : match.end()
             })
 
-        return matches
-    
-    def concorde(self, expression, context_size=30):
-        """
-        Construit un concordancier pour une expression donnée
-        """
-        self._build_full_text()
+        return correspondances
+
+    # Construit un concordancier pour une expression donnée
+    def concorde(self, expression, taille_contexte=30) :
+        self._construire_texte_complet()
 
         motif = re.compile(expression, re.IGNORECASE)
-        data = []
+        donnees = []
 
-        for m in motif.finditer(self._full_text):
-            start, end = m.start(), m.end()
+        for match in motif.finditer(self._texte_complet) :
+            debut, fin = match.start(), match.end()
 
-            left_context = self._full_text[max(0, start - context_size):start]
-            right_context = self._full_text[end:end + context_size]
+            contexte_gauche = self._texte_complet[max(0, debut - taille_contexte) : debut]
+            contexte_droit = self._texte_complet[fin : fin + taille_contexte]
 
-            data.append({
-                "contexte_gauche": left_context,
-                "motif": m.group(),
-                "contexte_droit": right_context
+            donnees.append({
+                "contexte_gauche" : contexte_gauche,
+                "motif" : match.group(),
+                "contexte_droit" : contexte_droit
             })
 
-        return pd.DataFrame(data)
-    
-    def nettoyer_texte(self, texte):
-        """
-        Nettoie une chaîne de caractères :
-        - minuscules
-        - suppression des retours à la ligne
-        - suppression de la ponctuation
-        - suppression des chiffres
-        """
+        return pd.DataFrame(donnees)
+
+    # Nettoie un texte pour l’analyse linguistique
+    def nettoyer_texte(self, texte) :
         texte = texte.lower()
         texte = texte.replace("\n", " ")
 
-        # Suppression des chiffres
         texte = re.sub(r"\d+", " ", texte)
-
-        # Suppression de la ponctuation
         texte = re.sub(r"[^\w\s]", " ", texte)
-
-        # Suppression des espaces multiples
         texte = re.sub(r"\s+", " ", texte)
 
         return texte.strip()
 
-    def stats(self, n=10):
-        """
-        Affiche des statistiques textuelles sur le corpus
-        """
-        self._build_full_text()
+    # Affiche des statistiques textuelles globales du corpus
+    def stats(self, n=10) :
+        self._construire_texte_complet()
 
-        # Nettoyage du texte global
-        texte_nettoye = self.nettoyer_texte(self._full_text)
-
-        # Tokenisation simple
+        texte_nettoye = self.nettoyer_texte(self._texte_complet)
         mots = texte_nettoye.split(" ")
 
-        # Fréquences
-        freq = {}
-        for mot in mots:
-            if mot:
-                freq[mot] = freq.get(mot, 0) + 1
+        frequences = {}
+        for mot in mots :
+            if mot :
+                frequences[mot] = frequences.get(mot, 0) + 1
 
-        # Nombre de mots différents
-        vocabulaire = len(freq)
-
-        print(f"Nombre de mots différents : {vocabulaire}")
+        print(f"Nombre de mots différents : {len(frequences)}")
         print(f"\nTop {n} mots les plus fréquents :")
 
-        # Tri par fréquence décroissante
-        mots_tries = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+        mots_tries = sorted(
+            frequences.items(),
+            key=lambda x : x[1],
+            reverse=True
+        )
 
-        for mot, count in mots_tries[:n]:
-            print(f"{mot} : {count}")
+        for mot, compte in mots_tries[:n] :
+            print(f"{mot} : {compte}")
 
-    def build_vocab(self):
-        """
-        Construit le vocabulaire du corpus
-        """
-        vocab_set = set()
+    # Construit le vocabulaire du corpus
+    def construire_vocabulaire(self) :
+        ensemble_vocabulaire = set()
 
-        for doc in self.id2doc.values():
-            texte_nettoye = self.nettoyer_texte(doc.texte)
+        for document in self.id2doc.values() :
+            texte_nettoye = self.nettoyer_texte(document.texte)
+            mots = re.split(r"\s+", texte_nettoye)
+            ensemble_vocabulaire.update(mot for mot in mots if mot)
 
-            # Découpage en mots par espaces et ponctuation
-            mots = re.split(r"\s+|[.,;:!?()\[\]\"']", texte_nettoye)
+        return {mot : 0 for mot in ensemble_vocabulaire}
 
-            # Ajout des mots non vides au vocabulaire
-            mots = [mot for mot in mots if mot]
-            vocab_set.update(mots)
+    # Calcule les fréquences TF et DF pour chaque mot du corpus
+    def compute_frequencies(self) :
+        vocabulaire = self.construire_vocabulaire()
+        frequences_documents = {mot : 0 for mot in vocabulaire}
 
-        # On retourne un dictionnaire avec valeur initiale 0 pour chaque mot
-        vocab = {mot: 0 for mot in vocab_set}
+        for document in self.id2doc.values() :
+            texte_nettoye = self.nettoyer_texte(document.texte)
+            mots = [mot for mot in texte_nettoye.split(" ") if mot]
 
-        return vocab
-    
-    def compute_frequencies(self):
-        """
-        Construit un tableau pandas contenant :
-        - TF : nombre total d'occurrences de chaque mot
-        - DF : nombre de documents contenant chaque mot
-        """
-        vocab = self.build_vocab()
+            for mot in mots :
+                vocabulaire[mot] += 1
 
-        # Initialisation du compteur de document frequency
-        df_counts = {mot: 0 for mot in vocab}
+            for mot in set(mots) :
+                frequences_documents[mot] += 1
 
-        # Parcours des documents
-        for doc in self.id2doc.values():
-            texte_nettoye = self.nettoyer_texte(doc.texte)
-            mots = re.split(r"\s+|[.,;:!?()\[\]\"']", texte_nettoye)
-            mots = [mot for mot in mots if mot]
-
-            # Compter occurrences (TF)
-            for mot in mots:
-                vocab[mot] += 1
-
-            # Compter document frequency (DF)
-            mots_uniques = set(mots)
-            for mot in mots_uniques:
-                df_counts[mot] += 1
-
-        # Création du DataFrame final
-        freq_df = pd.DataFrame({
-            "mot": list(vocab.keys()),
-            "TF": list(vocab.values()),
-            "DF": [df_counts[mot] for mot in vocab.keys()]
+        dataframe = pd.DataFrame({
+            "mot" : list(vocabulaire.keys()),
+            "TF" : list(vocabulaire.values()),
+            "DF" : [frequences_documents[mot] for mot in vocabulaire.keys()]
         })
 
-        # Tri par TF décroissante
-        freq_df = freq_df.sort_values(by="TF", ascending=False).reset_index(drop=True)
+        dataframe = dataframe.sort_values(
+            by="TF",
+            ascending=False
+        ).reset_index(drop=True)
 
-        return freq_df
-
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
+        return dataframe
