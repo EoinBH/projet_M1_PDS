@@ -46,6 +46,9 @@ class Corpus :
             document
         )
 
+        if hasattr(self, "_texte_complet"):
+            del self._texte_complet
+
     # Affiche les documents triés par date
     def show_by_date(self, n=5) :
         documents = [d for d in self.id2doc.values() if d.date is not None]
@@ -89,11 +92,15 @@ class Corpus :
 
     # Charge un corpus depuis un fichier CSV
     @classmethod
-    def load(cls, nom_fichier, nom) :
-        dataframe = pd.read_csv(nom_fichier)
+    def load(cls, nom_fichier, nom, reload=True):
         corpus = cls(nom)
 
-        for _, ligne in dataframe.iterrows() :
+        if reload:
+            corpus.reload(nom)
+
+        dataframe = pd.read_csv(nom_fichier)
+
+        for _, ligne in dataframe.iterrows():
             document = Document(
                 titre=ligne["titre"],
                 auteur=ligne["auteur"],
@@ -105,6 +112,16 @@ class Corpus :
 
         return corpus
 
+    def reload(self, nom=None):
+        self.nom = nom if nom else self.nom
+        self.auteurs = {}
+        self.id2doc = {}
+        self.nombre_documents = 0
+        self.nombre_auteurs = 0
+
+        if hasattr(self, "_texte_complet"):
+            del self._texte_complet
+    
     # Construit et mémorise le texte global du corpus
     def _construire_texte_complet(self) :
         if not hasattr(self, "_texte_complet") :
