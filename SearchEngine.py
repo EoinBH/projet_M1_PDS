@@ -4,6 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
+from tqdm import tqdm
 
 
 class SearchEngine :
@@ -148,6 +149,33 @@ class SearchEngine :
                     "titre" : document.titre,
                     "auteur" : document.auteur,
                     "source" : document.get_type()
+                })
+
+        return pd.DataFrame(resultats)
+    
+    def search_avec_progression(self, requete, top_n=5):
+        vecteur_requete = self._requete_vers_vecteur(requete)
+        if vecteur_requete is None:
+            return pd.DataFrame()
+
+        # Calcul des similarités
+        scores = self._similarite_cosinus(vecteur_requete)
+
+        # On utilise tqdm pour visualiser la progression
+        for i in tqdm(range(len(scores)), desc=f"Calcul similarité '{requete}'"):
+            _ = scores[i]  # ici on ne fait rien, juste pour la barre
+
+        meilleurs_ids = np.argsort(scores)[::-1][:top_n]
+
+        resultats = []
+        for identifiant_document in meilleurs_ids:
+            if scores[identifiant_document] > 0:
+                document = self.corpus.id2doc[identifiant_document]
+                resultats.append({
+                    "score": scores[identifiant_document],
+                    "titre": document.titre,
+                    "auteur": document.auteur,
+                    "source": document.get_type()
                 })
 
         return pd.DataFrame(resultats)

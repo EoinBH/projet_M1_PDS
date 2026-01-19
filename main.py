@@ -93,7 +93,7 @@ def construire_corpus(theme, nombre_max_posts) :
 
 # Point d'entrée principal du programme
 def main() :
-    corpus = construire_corpus("jazz", 20)
+    corpus = construire_corpus("jazz", 2000)
 
     print(corpus)
 
@@ -210,6 +210,9 @@ def main() :
     print(f"Matrice TFxIDF shape : {matrice_tfidf.shape}")
 
     resultats_recherche = moteur.search("jazz harmony", top_n=5)
+    print(tabulate(resultats_recherche, headers="keys"))
+
+    resultats_recherche = moteur.search_avec_progression("improvisation", top_n=5)
     print(tabulate(resultats_recherche, headers="keys"))
 
 

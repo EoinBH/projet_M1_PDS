@@ -112,7 +112,10 @@ class Corpus :
 
         return corpus
 
-    def reload(self, nom=None):
+    # Remplace complètement le contenu par un nouveau corpus
+    # Il s'agit d'méthode explicite de réinitialisation permettant de
+    # vider et recharger proprement les données, tout en conservant l’unicité de l’instance (Singleton)
+    def reload(self, nom=None) :
         self.nom = nom if nom else self.nom
         self.auteurs = {}
         self.id2doc = {}
