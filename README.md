@@ -1,2 +1,2 @@
 # projet_M1_PDS
-Ce projet permet à l’étudiant de réaliser un programme Python en passant par toutes les étapes de son cycle de vie : spécifications, analyse et conception, codage, vérification et maintenance. Il doit montrer que celui-ci est capable d’entrer dans la réalisation d’une application ambitieuse, bien structurée et maîtrisée.
+Ce projet a permis de développer un moteur de recherche textuel performant basé sur le calcul TF-IDF et la similarité cosinus. L’ensemble des fonctionnalités implémentées permet de construire un vocabulaire complet à partir de documents variés, de réaliser des recherches pertinentes par mots-clés, de filtrer les résultats par auteur et par date, et de visualiser les résultats grâce à une interface graphique intuitive.
